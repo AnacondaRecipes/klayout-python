@@ -1,44 +1,66 @@
-{% set name = "<PLEASE ADD PKG NAME>" %}
-{% set version = "<PLEASE ADD PKG VERSION>" %}
+{% set name = "klayout-python" %}
+{% set version = "0.30.14" %}
+{% set upstream_name = "klayout" %}
 
 package:
-  name: {{ name|lower }}
+  name: {{ name }}
   version: {{ version }}
 
 source:
-  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  sha256: <sha256>
+  url: https://pypi.org/packages/source/{{ upstream_name[0] }}/{{ upstream_name }}/{{ upstream_name }}-{{ version }}.tar.gz
+  sha256: b081efe837dd0533f66bf37545405890b8562bede83ef70ddd968f282910cddd
+  patches:
+    # Fix RPATH resolution for KLayout database plugins on macOS.
+    - patches/0001-fix-macos-plugin-rpath.patch  # [osx]
 
 build:
   number: 0
-  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
-  skip: True  # [py<38]
+  skip: true  # [py<310]
 
 requirements:
+  build:
+    - {{ stdlib('c') }}
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
   host:
     - python
     - pip
+    - setuptools
+    - tomli
+    - libpng {{ libpng }}
+    - libcurl {{ libcurl }}
+    - libexpat {{ libexpat }}
   run:
     - python
 
 test:
   imports:
-    - {{ name.replace('-', '.') }}
+    - klayout
+    - klayout.db
+    - klayout.tl
+    - klayout.rdb
+    - klayout.lib
   requires:
     - pip
   commands:
     - pip check
+    - python -c "import klayout.db as db; assert db.__version__ == '{{ version }}'"
+    - python -c "import klayout.db as db; assert str(db.Box(1, 2, 3, 4)) == '(1,2;3,4)'"
 
 about:
-  home: <PLEASE ADD HOME URL>
-  summary: <PLEASE ADD SUMMARY>
+  home: https://www.klayout.de/
+  summary: KLayout standalone Python package
   description: |
-    <PLEASE ADD DESCRIPTION>
-  license: <PLEASE ADD LICENSE>
-  license_family: <PLEASE ADD LICENSE_FAMILY>
-  license_file: <PLEASE_ADD_LICENSE_FILE>
-  dev_url: <PLEASE ADD DEV URL>
-  doc_url: <PLEASE ADD DOC URL>
+    KLayout is an open-source layout viewer and editor for
+    semiconductor designs. This package provides the standalone
+    Python bindings for layout data processing, including
+    geometry manipulation and GDSII/OASIS file handling,
+    without the KLayout GUI application.
+  license: GPL-3.0-or-later
+  license_family: GPL3
+  license_file: LICENSE
+  dev_url: https://github.com/KLayout/klayout
+  doc_url: https://www.klayout.org/klayout-pypi/
 
 extra:
   recipe-maintainers:
