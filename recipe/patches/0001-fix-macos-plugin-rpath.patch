@@ -1,0 +1,12 @@
+diff --git a/setup.py b/setup.py
+--- a/setup.py
++++ b/setup.py
+@@ -489,7 +489,9 @@
+                     "-Wl,-install_name,@rpath/%s" % self.libname_of(mod, is_lib=True),
+                 ]
+-            args += ["-Wl,-rpath,@loader_path/", "-Wl,-headerpad_max_install_names"]
++            loader_path = ["@loader_path"] + [".."] * len(options.get("submodules", []))
++            args += ["-Wl,-rpath," + "/".join(loader_path),
++                     "-Wl,-headerpad_max_install_names"]
+             args += options.get("ldflags-gcc", [])
+             args += options.get("ldflags-darwin", [])
